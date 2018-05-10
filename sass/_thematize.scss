@@ -1,0 +1,141 @@
+@import './internal/color';
+
+// The the theme by ID from the global set of themes.
+@function _theme-by-id($theme-id) {
+  @return map-get($themes, $theme-id);
+}
+
+
+// Get the selector the given theme ID.
+@function _theme-selector($theme-id) {
+  @return ".#{$theme-prefix}theme-#{$theme-id}";
+}
+
+
+// Get the property value for the given theme and property.
+@function _value($theme, $property, $skip-fallback: false) {
+  $result: null;
+
+  @if map-has-key($theme, $property) {
+    $result: map-get($theme, $property);
+
+  } @else if not $skip-fallback {
+    $td: _theme-by-id($theme-default);
+    @if map-has-key($td, $property) {
+      // fallback to default theme
+      $result: map-get($td, $property);
+    }
+  }
+
+  @if type-of($result) == 'string' and str-slice($result, 0, 1) == '$' {
+    // resolve references starting with '$'
+    $result: _theme-value($theme, str-slice($result, 2, str-length($result)));
+  }
+
+  @return $result;
+}
+
+
+@function _resolve-reference($theme, $value) {
+  $result: $value;
+  @if type-of($value) == 'string' and str-slice($value, 0, 1) == '$' {
+    // recursively resolve references that start with '$'
+    $result: _resolve-reference($theme, _value($theme, str-slice($value, 2, str-length($value))));
+  }
+  @return $result;
+}
+
+
+@function _resolve-color($theme, $color, $push-pull) {
+  @if $push-pull == null or $push-pull == 0 {
+    @return $color;
+  }
+  @return color-palette-tone($color, $push-pull);
+}
+
+
+@function _theme-value($theme, $property, $push-pull: null, $skip-fallback: false) {
+  $value: _value($theme, $property, $skip-fallback);
+
+  @if $value == null {
+    @return null;
+  }
+
+  @if type-of($value) == 'color' {
+    @return _resolve-color($theme, $value, $push-pull);
+  }
+
+  @if is-palette-color-format($value) {
+    // we must resolve the palette color key incase it is a reference
+    $palette-key: _resolve-reference($theme, palette-color-key($value));
+    $color-index: palette-color-index($value);
+    $color: palette-color($palette-key, $color-index);
+
+    @return _resolve-color($theme, $color, $push-pull);
+  }
+
+  // simply return the value
+  @return $value;
+}
+
+
+/// Get the theme value for the given property.
+/// Only call this function within the thematize mixin.
+///
+/// @param {String} $property - the theme property
+/// @param {Number} $push-pull - adjustment for color properties
+///
+/// @return {*} CSS property value
+@function theme($property, $push-pull: null) {
+  // skip the fallback to not bloat the CSS if all we are doing is duplicating properties in themes where
+  // the value of the property is the same as the default
+  $skip-fallback: $_theme-current != $theme-default;
+  @return _theme-value(_theme-by-id($_theme-current), $property, $push-pull, $skip-fallback);
+}
+
+
+/// Get the theme value for the given theme ID and property.
+///
+/// @param {String} $theme-id - the theme ID
+/// @param {String} $property - the theme property
+/// @param {Number} $push-pull - adjustment for color properties
+///
+/// @return {*} CSS property value
+@function theme-value($theme-id, $property, $push-pull: null) {
+  @return _theme-value(_theme-by-id($theme-id), $property, $push-pull);
+}
+
+
+/// Mixin to create rules for each theme.
+@mixin thematize {
+  @each $theme-id, $theme in $themes {
+    $_theme-current: $theme-id !global;
+
+    @if $theme-id == $theme-default {
+      & {
+        @content;
+      }
+    } @else {
+      #{_theme-selector($theme-id)} {
+        @content;
+      }
+    }
+  }
+
+  // re-assign back to default theme
+  $_theme-current: $theme-default !global;
+}
+
+
+// Default selector prefix.
+$theme-prefix: '' !default;
+
+// Name of default theme.
+$theme-default: 'default' !default;
+
+// Create a default empty set of themes.
+$themes: (
+  'default': ()
+) !default;
+
+$_theme-current: $theme-default;

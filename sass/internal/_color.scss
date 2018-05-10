@@ -1,0 +1,134 @@
+// default empty palette
+$theme-color-palette: () !default;
+
+/// Determine if the given value is a palette color in the list format: (string, number)
+///
+/// @return {Boolean}
+@function is-palette-color-format($value) {
+  @return type-of($value) == 'list' and length($value) == 2 and
+    type-of(nth($value, 1)) == 'string' and (type-of(nth($value, 2)) == 'number');
+}
+
+
+/// Given a palette color, returns the color key.
+///
+/// @param {List} $color-object - a palette color
+///
+/// @return {String} color key
+@function palette-color-key($color-object) {
+  @return nth($color-object, 1);
+}
+
+
+/// Given a palette color, returns the color index.
+///
+/// @param {List} $color-object - a palette color
+///
+/// @return {Number} color index
+@function palette-color-index($color-object) {
+  @return nth($color-object, 2);
+}
+
+
+/// Search palettes if the given color exists. If so, return the palette-key and index.
+@function _find-palette-color($color) {
+  @if is-palette-color-format($color) {
+    @return $color;
+  }
+  @each $palette-key, $values in $theme-color-palette {
+    @each $index, $pcolor in $values {
+      @if $color == $pcolor {
+        @return ($palette-key, $index);
+      }
+    }
+  }
+  @return null;
+}
+
+
+/// Darken a color.
+@function _shade($color, $percentage) {
+  @return mix(black, $color, $percentage);
+}
+
+
+/// Lighten a color.
+@function _tint($color, $percentage) {
+  @return mix(white, $color, $percentage);
+}
+
+
+// Shade a color from a palette the amount of stops.
+// If the color does not exist, a step is 10%.
+@function _color-shade($color, $steps) {
+  $color-object: _find-palette-color($color);
+  @if $color-object == null {
+    @return _shade($color, percentage($steps * .1));
+  }
+
+  $index: palette-color-index($color-object) + $steps;
+  $palette-key: palette-color-key($color-object);
+  $size: length(map-get($theme-color-palette, $palette-key));
+
+  @if ($index > $size) {
+    $last-color: palette-color($palette-key, $size);
+    @return _shade($last-color, percentage(($index - $size) * .1));
+  }
+
+  @return palette-color($palette-key, $index);
+}
+
+
+// Tint a color from a palette the amount of stops.
+// If the color does not exist, a step is 10%.
+@function _color-tint($color, $steps) {
+  $color-object: _find-palette-color($color);
+  @if $color-object == null {
+    @return _tint($color, percentage($steps * .1));
+  }
+
+  $index: palette-color-index($color-object) - $steps;
+  $palette-key: palette-color-key($color-object);
+
+  @if ($index < 1) {
+    $first-color: palette-color($palette-key, 1);
+    @return _tint($first-color, percentage(abs(($index - 1) * .1)));
+  }
+
+  @return palette-color($palette-key, $index);
+}
+
+
+/// Get the palette color.
+///
+/// @param {String} $palette-key - the palette key
+/// @param {Number} $index - the index of the color in the palette
+/// @param {Number} $alpha [1] - additionally adjust the alpha of the color
+///
+/// @return {Color} the palette color
+@function palette-color($palette-key, $index, $alpha: 1) {
+  $palette: map-get($theme-color-palette, $palette-key);
+  @if type-of($palette) != 'map' {
+    @return null;
+  }
+  @if map-has-key($palette, $index) {
+    @return rgba(map-get($palette, $index), $alpha);
+  }
+  @return null;
+}
+
+
+/// Tone the color by the given amount of steps.
+/// A step is a single movement up or down the palette scale. If the color
+/// is not in a palette, then a step is 10% closer to black or white.
+///
+/// @param {Color} $color - color to adjust
+/// @param {Number} $steps - the number (int) of steps to tone
+///
+/// @return {Color} the adjusted color
+@function color-palette-tone($color, $steps) {
+  @if $steps > 0 {
+    @return _color-shade($color, $steps);
+  }
+  @return _color-tint($color, abs($steps));
+}

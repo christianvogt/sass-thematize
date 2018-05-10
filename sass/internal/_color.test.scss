@@ -1,0 +1,84 @@
+@import 'true';
+
+// test palette
+$theme-color-palette: (
+  'shade': (
+    1: #ffffff,
+    2: #dfdfdf,
+    3: #bfbfbf,
+    4: #9f9f9f,
+    5: #7f7f7f,
+    6: #5f5f5f,
+    7: #3f3f3f,
+    8: #1f1f1f,
+    9: #000000
+  ),
+  'test': (
+    1: #0067E5,
+    2: #1767C8,
+    3: #2F67AB,
+    4: #47678F,
+    5: #5F6872,
+    6: #776855,
+    7: #8F6839,
+    8: #A7681C,
+    9: #BF6900
+  ),
+);
+
+@import 'color';
+
+
+@include describe('color') {
+
+  @include it('_shade') {
+    @include assert-equal(_shade(#ffffff, 10%), #e6e6e6);
+  }
+
+  @include it('_tint') {
+    @include assert-equal(_tint(#000000, 10%), #1a1a1a);
+  }
+
+  @include it('palette-color-key') {
+    @include assert-equal(palette-color-key(('test', 5)), 'test');
+  }
+
+  @include it('palette-color-index') {
+    @include assert-equal(palette-color-index(('test', 5)), 5);
+  }
+
+  @include it('_find-palette-color') {
+    @include assert-equal(_find-palette-color(#ff0000), null);
+    @include assert-equal(_find-palette-color(#000000), ('shade', 9));
+  }
+
+  @include it('_color-tint') {
+    @include assert-equal(_color-tint(palette-color('shade', 5), 2), palette-color('shade', 3));
+    @include assert-equal(_color-tint(#0000a0, 1),#1a1aaa);
+    @include assert-equal(_color-tint(palette-color('test', 5), 4),palette-color('test', 1));
+    @include assert-equal(_color-tint(palette-color('test', 1), 1), #1a76e8);
+    @include assert-equal(_color-tint(palette-color('test', 5), 14), white);
+  }
+
+  @include it('_color-shade') {
+    @include assert-equal(_color-shade(palette-color('shade', 5), 2), palette-color('shade', 7));
+    @include assert-equal(_color-shade(#ffffa0, 1), #e6e690);
+    @include assert-equal(_color-shade(palette-color('test', 5), 4), palette-color('test', 9));
+    @include assert-equal(_color-shade(palette-color('test', 9), 1), #ac5f00);
+    @include assert-equal(_color-shade(palette-color('test', 5), 14), black);
+  }
+
+  @include it('palette-color') {
+    @include assert-equal(palette-color('doesnotexist', 1), null);
+    @include assert-equal(palette-color('shade', 10), null);
+    @include assert-equal(palette-color('shade', 1, .5), rgba(#ffffff, .5));
+    @include assert-equal(palette-color('shade', 1), #ffffff);
+  }
+
+  @include it('color-palette-tone') {
+    @include assert-equal(color-palette-tone(('shade', 5), -2), palette-color('shade', 3));
+    @include assert-equal(color-palette-tone(#0000a0, -1), #1a1aaa);
+    @include assert-equal(color-palette-tone(('shade', 5), 2), palette-color('shade', 7));
+    @include assert-equal(color-palette-tone(#ffffa0, 1), #e6e690);
+  }
+}

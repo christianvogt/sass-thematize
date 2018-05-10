@@ -1,0 +1,161 @@
+@import 'true';
+
+// test palettes
+$theme-color-palette: (
+  'test': (
+    1: #0067E5,
+    2: #1767C8,
+    3: #2F67AB,
+    4: #47678F,
+    5: #5F6872,
+    6: #776855,
+    7: #8F6839,
+    8: #A7681C,
+    9: #BF6900
+  ),
+  'shade': (
+    1: #ffffff,
+    2: #dfdfdf,
+    3: #bfbfbf,
+    4: #9f9f9f,
+    5: #7f7f7f,
+    6: #5f5f5f,
+    7: #3f3f3f,
+    8: #1f1f1f,
+    9: #000000
+  )
+);
+
+// test themes
+$themes: (
+  'default': (
+    background: white,
+    base: 'test',
+    size: 10,
+    color: ('shade', 5),
+    ref: '$color',
+    scale: 'shade',
+    refColor: ('$scale', 2),
+    scale2: '$scale',
+    refColor2: ('$scale2', 4),
+    red: #ff0000,
+  ),
+  'dark': (
+    size: 15,
+    color: ('shade', 3),
+    scale2: 'test'
+  )
+) !default;
+
+// import thematize after assigning test values
+@import 'thematize';
+
+
+@include describe('thematize') {
+
+  @include it('empty default theme prefix') {
+    @include assert-equal($theme-prefix, '');
+  }
+
+  @include describe('theme-value') {
+
+    @include it('get theme value') {
+      @include assert-equal(theme(red), #ff0000);
+      @include assert-equal(theme(size), 10);
+      @include assert-equal(theme-value(default, size), 10);
+      @include assert-equal(theme-value(default, color), #7f7f7f);
+      @include assert-equal(theme-value(dark, size), 15);
+
+      // inherited fallback
+      @include assert-equal(theme-value(dark, base), 'test');
+    }
+
+    @include it('resolve reference') {
+      @include assert-equal(theme(ref), #7f7f7f);
+      @include assert-equal(theme-value(default, ref), #7f7f7f);
+      @include assert-equal(theme-value(dark, ref), #bfbfbf);
+    }
+
+    @include it('resolve color reference') {
+      @include assert-equal(theme(refColor), #dfdfdf);
+      @include assert-equal(theme-value(default, refColor), #dfdfdf);
+      @include assert-equal(theme-value(dark, refColor), #dfdfdf);
+    }
+
+    @include it('recursively resolve color reference') {
+      @include assert-equal(theme(refColor2), #9f9f9f);
+      @include assert-equal(theme-value(default, refColor2), #9f9f9f);
+      @include assert-equal(theme-value(dark, refColor2), #47678F);
+    }
+
+    @include it('resolve reference') {
+      @include assert-equal(theme(ref), #7f7f7f);
+      @include assert-equal(theme-value(default, ref), #7f7f7f);
+      @include assert-equal(theme-value(dark, ref), #bfbfbf);
+    }
+
+    @include it('push and pull colors') {
+      @include assert-equal(theme(red, 2), #cc0000);
+      @include assert-equal(theme-value(dark, red, 2), #cc0000);
+      @include assert-equal(theme(color, 3), #1f1f1f);
+    }
+  }
+
+  @include describe('theme loop') {
+
+    @include it('thematize loops through themes to create qualified rules') {
+
+      @include assert {
+        @include output {
+          @include thematize() {
+            .rule {
+              font-family: monospace;
+              line-height: theme(size);
+              color: theme(color, 3);
+              background: theme(background);
+            }
+          }
+        }
+
+        @include expect {
+          .rule {
+            font-family: monospace;
+            line-height: 10;
+            color: #1f1f1f;
+            background: white;
+          }
+          .theme-dark .rule {
+            font-family: monospace;
+            line-height: 15;
+            color: #5f5f5f;
+          }
+        }
+      }
+    }
+
+    @include it('customize theme selector prefix') {
+      $theme-prefix: 'foobar-' !global;
+
+      @include assert {
+        @include output {
+          @include thematize() {
+            .rule {
+              line-height: theme(size);
+            }
+          }
+        }
+
+        @include expect {
+          .rule {
+            line-height: 10;
+          }
+          .foobar-theme-dark .rule {
+            line-height: 15;
+          }
+        }
+      }
+
+      $theme-prefix: '' !global;
+    }
+  }
+}
