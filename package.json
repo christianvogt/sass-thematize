@@ -1,6 +1,6 @@
 {
   "name": "sass-thematize",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A SASS utility for creating and working with themes.",
   "repository": {
     "type": "git",
