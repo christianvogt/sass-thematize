@@ -3,7 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/sass-thematize.svg?style=flat-square)](https://www.npmjs.com/package/sass-thematize)
 [![Build Status](https://travis-ci.org/christianvogt/sass-thematize.svg?branch=master)](https://travis-ci.org/christianvogt/sass-thematize#)
 
-An SCSS utility for generating multiple themes.
+A SASS utility for generating multiple themes.
 
 Install with [npm](https://www.npmjs.com/):
 
