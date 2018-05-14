@@ -40,12 +40,14 @@ $themes: (
     font-size: 16px,
     text-color: black,
     background-color: white,
-    primary-color: (blue, 6)
+    primary-color: (blue, 6),
+    button-color: '$text-color' // reference to `text-color`
   ),
   'dark': (
     text-color: white,
     background-color: black,
     primary-color: (blue, 3)
+    // no need to re-define `button-color` because the reference will pick up the `dark` `text-color`
   )
 );
 
@@ -53,7 +55,7 @@ $themes: (
 @include thematize {
   .button {
     font-size: theme(font-size);
-    color: theme(text-color);
+    color: theme(button-color);
     background-color: theme(background-color);
 
     &:hover,
