@@ -23,9 +23,9 @@
   "author": "Christian Vogt <christian.m.vogt@gmail.com>",
   "license": "MIT",
   "devDependencies": {
-    "glob": "^7.1.2",
-    "jest": "^22.4.3",
-    "node-sass": "^4.9.0",
-    "sass-true": "^4.0.0"
+    "glob": "^7.1.6",
+    "jest": "^24.9.0",
+    "node-sass": "^4.13.0",
+    "sass-true": "^5.0.0"
   }
 }
