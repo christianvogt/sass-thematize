@@ -25,7 +25,7 @@
   "devDependencies": {
     "glob": "^7.1.6",
     "jest": "^24.9.0",
-    "node-sass": "^4.13.0",
+    "node-sass": "^7.0.0",
     "sass-true": "^5.0.0"
   }
 }
